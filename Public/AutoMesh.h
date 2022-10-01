@@ -49,7 +49,7 @@ public:
 	static TMap<FString, FString> GetAssetMap(UObject* Asset);
 	
 	/**
-	 * Get static mesh from AStaticMeshActor or UStaticMesh object.
+	 * Get static mesh from AStaticMeshActor, UStaticMeshComponent, or UStaticMesh object.
 	 * @param StaticMeshObject - Static mesh.
 	 */
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")

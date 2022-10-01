@@ -64,17 +64,15 @@ UStaticMesh* AAutoMesh::GetStaticMesh(UObject* StaticMeshObject)
 	UStaticMesh* StaticMesh = nullptr;
 	if (StaticMeshObject->IsA(AStaticMeshActor::StaticClass()))
 	{
-		UE_LOG(LogAutoMesh, Warning, TEXT("Detected %s"), *StaticMeshObject->GetClass()->GetName())
 		const AStaticMeshActor* StaticMeshActor = Cast<AStaticMeshActor>(StaticMeshObject);
-		checkf(StaticMeshActor != nullptr, TEXT("nullptr: StaticMeshActor"));
 		StaticMesh = StaticMeshActor->GetStaticMeshComponent()->GetStaticMesh();
-		checkf(StaticMesh != nullptr, TEXT("nullptr: StaticMesh"));
 	}
 	else if (StaticMeshObject->IsA(UStaticMeshComponent::StaticClass()))
 	{
 		const UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(StaticMeshObject);
 		StaticMesh = StaticMeshComponent->GetStaticMesh();
 	}
+	
 	else if (StaticMeshObject->IsA(UStaticMesh::StaticClass()))
 	{
 		StaticMesh = Cast<UStaticMesh>(StaticMeshObject);
@@ -84,7 +82,6 @@ UStaticMesh* AAutoMesh::GetStaticMesh(UObject* StaticMeshObject)
 		UE_LOG(LogAutoMesh, Error, TEXT("Invalid Static Mesh Class: %s"), *StaticMeshObject->GetClass()->GetName());
 	}
 
-	checkf(StaticMesh != nullptr, TEXT("nullptr: StaticMesh"));
 	return StaticMesh;
 }
 
@@ -181,12 +178,14 @@ UMaterial* AAutoMesh::CreateMasterMaterial(UStaticMesh* StaticMesh)
 			*EngineContentDir,
 			TEXT("ArtTools/RenderToTexture/Textures/127grey.uasset")
 		);
+		checkf(Texture127Grey != nullptr, TEXT("nullptr: Texture127Grey"));
 		
 		UTexture* TextureNormalMap = AAutoMesh::GetTexture(
 			*EngineContentDir,
 			TEXT("EngineMaterials/BaseFlattenNormalMap.uasset")
 		);
-
+		checkf(TextureNormalMap != nullptr, TEXT("nullptr: TextureNormalMap"));
+		
 		// Create parameterized MaterialExpressions
 		UMaterialExpressionTextureSampleParameter2D* DiffuseNode =
 			NewObject<UMaterialExpressionTextureSampleParameter2D>(NewMaterial);
@@ -269,7 +268,6 @@ UTexture* AAutoMesh::GetTexture(FString PrefixDir, const FString TextureFilename
 		UE_LOG(LogAutoMesh, Error, TEXT("Not Exists: %s"), *TexturePath);
 	}
 
-	checkf(Texture != nullptr, TEXT("nullptr: Texture"));
 	return Texture;
 }
 
