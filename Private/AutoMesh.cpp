@@ -5,12 +5,14 @@
 
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
+#include "EditorTutorial.h"
 #include "HairStrandsInterface.h"
 #include "IContentBrowserSingleton.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/StaticMeshActor.h"
 #include "Factories/MaterialFactoryNew.h"
 #include "Factories/MaterialInstanceConstantFactoryNew.h"
+#include "Logging/TokenizedMessage.h"
 #include "Materials/MaterialExpressionTextureSampleParameter2D.h"
 #include "Materials/MaterialInstance.h"
 #include "Materials/MaterialInstanceConstant.h"
@@ -39,6 +41,38 @@ void AAutoMesh::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+FString AAutoMesh::GetIniValue(const FString IniFile, const FString Section, const FString Key)
+{
+	FString Value;
+	if (GConfig->GetString(
+		*Section,
+		*Key,
+		Value,
+		IniFile
+	))
+	{
+		UE_LOG(LogAutoMesh, Warning, TEXT("Detected INI, %s: %s"), *Key, *Value);
+	}
+	return Value;
+}
+
+TMap<FString, FString> AAutoMesh::GetIniValues()
+{
+	TMap<FString, FString> IniValues;
+	if (GConfig)
+	{
+		const FString IniFile = FPaths::ProjectConfigDir().Append("Texturematica.ini");
+		const FString Section = TEXT("/Script/Texturematica.AutoMesh");
+		const FString MaterialsDir = AAutoMesh::GetIniValue(IniFile, Section, TEXT("MaterialsDir"));
+		const FString MeshesDir = AAutoMesh::GetIniValue(IniFile, Section, TEXT("MeshesDir"));
+		const FString TexturesDir = AAutoMesh::GetIniValue(IniFile, Section, TEXT("TexturesDir"));
+		IniValues.Add(TEXT("MaterialsDir"), MaterialsDir);
+		IniValues.Add(TEXT("MeshesDir"), MeshesDir);
+		IniValues.Add(TEXT("TexturesDir"), TexturesDir);
+	}
+	return IniValues;
 }
 
 TMap<FString, FString> AAutoMesh::GetAssetMap(UObject* Asset)
@@ -97,6 +131,10 @@ UMaterial* AAutoMesh::CreateMasterMaterial(UStaticMesh* StaticMesh)
 	const FString StaticMeshObjectName = StaticMeshMap["ObjectName"];
 	const FString StaticMeshPackagePath = StaticMeshMap["PackagePath"];
 	const FString StaticMeshPackageName = StaticMeshMap["PackageName"];
+
+	const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());
+	FString MeshesDir = AutoMeshDefault->MeshesDir;
+	UE_LOG(LogAutoMesh, Warning, TEXT("AutoMeshDefault, MeshesDir: %s"), *MeshesDir);
 	
 	TArray<FString> PackagePathArray;
 	StaticMeshPackagePath.ParseIntoArray(
@@ -281,6 +319,8 @@ UMaterialInstanceConstant* AAutoMesh::CreateMaterialInstance(UMaterial* MasterMa
 	const FString StaticMeshObjectName = StaticMeshMap["ObjectName"];
 	const FString StaticMeshPackagePath = StaticMeshMap["PackagePath"];
 	const FString StaticMeshPackageName = StaticMeshMap["PackageName"];
+	// const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>();
+	
 	const FString MaterialInstancePackagePath = *StaticMeshPackagePath.Replace(
 		TEXT("Meshes"),
 		TEXT("Materials")

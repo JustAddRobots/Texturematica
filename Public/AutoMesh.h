@@ -23,7 +23,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogAutoMesh, Log, All);
  * /Game/Textures/[Prop|Structure]/T_[Prop|Structure]_MeshName_[D|M|N]
  * /Game/Materials/[Prop|Structure]/
  */
-UCLASS()
+UCLASS(Config=Texturematica)
 class TEXTUREMATICA_API AAutoMesh : public AActor
 {
 	GENERATED_BODY()
@@ -39,6 +39,21 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(Config, BlueprintReadOnly, Category="AutoMesh")
+	FString MaterialsDir; 
+	
+	UPROPERTY(Config, BlueprintReadOnly, Category="AutoMesh")
+	FString MeshesDir; 
+	
+	UPROPERTY(Config, BlueprintReadOnly, Category="AutoMesh")
+	FString TexturesDir;
+
+	static FString GetIniValue(FString IniFile, FString Section, FString Key);
+
+	UFUNCTION(BlueprintCallable, Category="AutoMesh")
+	static TMap<FString, FString> GetIniValues();
+	
 
 	/**
 	 * Get a map of asset's package and object information with the following keys:
