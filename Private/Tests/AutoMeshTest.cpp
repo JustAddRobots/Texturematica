@@ -93,9 +93,9 @@ void SpecGetStaticMesh::Define()
 			CubeMeshComponent->SetStaticMesh(CubeMesh);
 		});
 
-		It("should return a valid StaticMesh from StaticMeshActor", [this]()
+		It("should return valid StaticMesh from StaticMeshActor", [this]()
 		{
-			UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMeshActor);
+			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMeshActor);
 			TestEqual(
 				TEXT("Testing StaticMeshActor"),
 				SM->GetClass()->GetName(),
@@ -103,9 +103,9 @@ void SpecGetStaticMesh::Define()
 			);
 		});
 		
-		It("should return a valid StaticMesh from StaticMeshComponent", [this]()
+		It("should return valid StaticMesh from StaticMeshComponent", [this]()
 		{
-			UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMeshComponent);
+			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMeshComponent);
 			TestEqual(
 				TEXT("Testing StaticMeshComponent"),
 				SM->GetClass()->GetName(),
@@ -113,9 +113,9 @@ void SpecGetStaticMesh::Define()
 			);	
 		});
 		
-		It("should return a valid StaticMesh from StaticMesh", [this]()
+		It("should return valid StaticMesh from StaticMesh", [this]()
 		{
-			UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMesh);
+			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMesh);
 			TestEqual(
 				TEXT("Testing StaticMesh"),
 				SM->GetClass()->GetName(),
@@ -125,7 +125,7 @@ void SpecGetStaticMesh::Define()
 		
 		It("should return 'Cube' StaticMesh Name", [this]()
 		{
-			UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMesh);
+			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMesh);
 			TestEqual(
 				TEXT("Testing SM Object Name"),
 				SM->GetName(),
@@ -140,7 +140,7 @@ void SpecGetStaticMesh::Define()
 				EAutomationExpectedErrorFlags::Contains,
 				1
 			);
-			UStaticMesh* SM = AAutoMesh::GetStaticMesh(TestWorld);
+			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(TestWorld);
 			TestNull(TEXT("Testing null SM"), SM);
 		});
 		
@@ -149,6 +149,71 @@ void SpecGetStaticMesh::Define()
 			TestWorld = GEngine->GetWorldFromContextObject(CubeMeshActor, EGetWorldErrorMode::ReturnNull);
 			TestNotNull("TestWorld Exists", TestWorld);
 			TestWorld->DestroyWorld(false);
+		});
+	});
+}
+
+BEGIN_DEFINE_SPEC(
+	SpecGetTexture,
+	"Texturematica.AutoMesh.SpecGetTexture",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+	FString EngineContentDir;
+END_DEFINE_SPEC(SpecGetTexture)
+
+void SpecGetTexture::Define()
+{
+	Describe("Execute()", [this]()
+	{
+		BeforeEach([this]()
+		{
+			IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+			EngineContentDir = FPaths::EngineContentDir();
+			EngineContentDir = FileManager.ConvertToAbsolutePathForExternalAppForRead(*EngineContentDir);
+		});
+
+		It("should return valid Texture from valid prefix and valid file path", [this]()
+		{
+			const UTexture* T = AAutoMesh::GetTexture(
+				*EngineContentDir,
+				TEXT("Engine_MI_Shaders/T_Base_Tile_Diffuse.uasset")
+			);
+			TestEqual(
+				TEXT("Testing Texture"),
+				T->GetClass()->GetName(),
+				TEXT("Texture")
+			);	
+		});
+
+		It("should return valid Texture from empty prefix and valid file path", [this]()
+		{
+			const FString TexturePath = FString::Printf(
+				TEXT("%sEngine_MI_Shaders/T_Base_Tile_Diffuse.uasset"),
+				*EngineContentDir
+			);
+			const UTexture* T = AAutoMesh::GetTexture(
+				TEXT(""),
+				TexturePath
+			);
+			TestEqual(
+				TEXT("Testing Texture"),
+				T->GetClass()->GetName(),
+				TEXT("Texture")
+			);	
+		});
+
+		It("should return nullptr from non-Texture asset", [this]()
+		{
+			AddExpectedError(
+				"Invalid Texture",
+				EAutomationExpectedErrorFlags::Contains,
+				1
+			);
+			const UTexture* T = AAutoMesh::GetTexture(
+				*EngineContentDir,
+				TEXT("%sBasicShapes/Cube.Cube")
+			);
+			TestNull(TEXT("Testing null T"), T);
 		});
 	});
 }

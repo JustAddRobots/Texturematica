@@ -63,7 +63,7 @@ TMap<FString, FString> AAutoMesh::GetIniValues()
 	TMap<FString, FString> IniValues;
 	if (GConfig)
 	{
-		const FString IniFile = FPaths::ProjectConfigDir().Append("Texturematica.ini");
+		const FString IniFile = FPaths::ProjectConfigDir().Append("DefaultTexturematica.ini");
 		const FString Section = TEXT("/Script/Texturematica.AutoMesh");
 		const FString MaterialsDir = AAutoMesh::GetIniValue(IniFile, Section, TEXT("MaterialsDir"));
 		const FString MeshesDir = AAutoMesh::GetIniValue(IniFile, Section, TEXT("MeshesDir"));
@@ -132,9 +132,9 @@ UMaterial* AAutoMesh::CreateMasterMaterial(UStaticMesh* StaticMesh)
 	const FString StaticMeshPackagePath = StaticMeshMap["PackagePath"];
 	const FString StaticMeshPackageName = StaticMeshMap["PackageName"];
 
+	// Get plugin defaults from CDO
 	const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());
-	FString MeshesDir = AutoMeshDefault->MeshesDir;
-	UE_LOG(LogAutoMesh, Warning, TEXT("AutoMeshDefault, MeshesDir: %s"), *MeshesDir);
+	UE_LOG(LogAutoMesh, Warning, TEXT("AutoMeshDefault, MeshesDir: %s"), *AutoMeshDefault->MeshesDir);
 	
 	TArray<FString> PackagePathArray;
 	StaticMeshPackagePath.ParseIntoArray(
@@ -145,8 +145,8 @@ UMaterial* AAutoMesh::CreateMasterMaterial(UStaticMesh* StaticMesh)
 	const FString MaterialPackagePath = (
 		TEXT("/") + PackagePathArray[0] + TEXT("/") + PackagePathArray[1]
 	).Replace(
-		TEXT("Meshes"),
-		TEXT("Materials")
+		*AutoMeshDefault->MeshesDir,
+		*AutoMeshDefault->MaterialsDir
 	);
 
 	if (!FPackageName::IsValidPath(MaterialPackagePath))
@@ -314,24 +314,26 @@ UMaterialInstanceConstant* AAutoMesh::CreateMaterialInstance(UMaterial* MasterMa
 	checkf(MasterMaterial != nullptr, TEXT("nullptr: MasterMaterial"));
 	checkf(StaticMesh != nullptr, TEXT("nullptr: StaticMesh"));
 	
+	// Get plugin defaults from CDO
+	const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());
+	
 	TMap<FString, FString> StaticMeshMap = AAutoMesh::GetAssetMap(StaticMesh);
 	const FString StaticMeshObjectPath = StaticMeshMap["ObjectPath"];
 	const FString StaticMeshObjectName = StaticMeshMap["ObjectName"];
 	const FString StaticMeshPackagePath = StaticMeshMap["PackagePath"];
 	const FString StaticMeshPackageName = StaticMeshMap["PackageName"];
-	// const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>();
 	
 	const FString MaterialInstancePackagePath = *StaticMeshPackagePath.Replace(
-		TEXT("Meshes"),
-		TEXT("Materials")
+		*AutoMeshDefault->MeshesDir,
+		*AutoMeshDefault->MaterialsDir
 	);
 	const FString MaterialInstanceObjectName = *StaticMeshObjectName.Replace(
 		TEXT("SM_"),
 		TEXT("MI_")
 	);
 	const FString MaterialInstancePackageName = *StaticMeshPackageName.Replace(
-		TEXT("Meshes"),
-		TEXT("Materials")
+		*AutoMeshDefault->MeshesDir,
+		*AutoMeshDefault->MaterialsDir
 	).Replace(
 		TEXT("SM_"),
 		TEXT("MI_")
@@ -405,6 +407,9 @@ UMaterialInstanceConstant* AAutoMesh::AddTexturesToMIC(UMaterialInstanceConstant
 	checkf(MaterialInstance != nullptr, TEXT("nullptr: MaterialInstance"));
 	checkf(StaticMesh != nullptr, TEXT("nullptr: StaticMesh"));
 	
+	// Get plugin defaults from CDO
+	const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());
+	
 	TMap<FString, FString> StaticMeshMap = AAutoMesh::GetAssetMap(StaticMesh);
 	const FString StaticMeshObjectPath = StaticMeshMap["ObjectPath"];
 	const FString StaticMeshObjectName = StaticMeshMap["ObjectName"];
@@ -425,8 +430,8 @@ UMaterialInstanceConstant* AAutoMesh::AddTexturesToMIC(UMaterialInstanceConstant
 		Param.ToString(ParamStr);
 		
 		FString TexturePackagePath = StaticMeshPackagePath.Replace(
-			TEXT("Meshes"),
-			TEXT("Textures")
+			*AutoMeshDefault->MeshesDir,
+			*AutoMeshDefault->TexturesDir
 		);
 
 		FString TextureObjectName = StaticMeshObjectName.Replace(
@@ -442,8 +447,8 @@ UMaterialInstanceConstant* AAutoMesh::AddTexturesToMIC(UMaterialInstanceConstant
 			TEXT("SM_"),
 			TEXT("T_")
 		).Replace(
-			TEXT("Meshes"),
-			TEXT("Textures")
+			*AutoMeshDefault->MeshesDir,
+			*AutoMeshDefault->TexturesDir
 		).Append(
 			"_"
 		).Append(

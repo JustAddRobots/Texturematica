@@ -49,15 +49,24 @@ public:
 	UPROPERTY(Config, BlueprintReadOnly, Category="AutoMesh")
 	FString TexturesDir;
 
+	/**
+	 * Get INI value from file.
+	 * @param IniFile - INI file to search.
+	 * @param Section - Section in INI file to search.
+	 * @param Key - Search key.
+	 */
 	static FString GetIniValue(FString IniFile, FString Section, FString Key);
 
+	/**
+	 * Get a map of the plugin's INI. Requires plugin INI (DefaultTexturematica.ini)
+	 * in Config path.
+	 */
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")
 	static TMap<FString, FString> GetIniValues();
 	
-
 	/**
 	 * Get a map of asset's package and object information with the following keys:
-	 *	"Object Name", "Object Path", "Package Name", "Package Path"
+	 *	"Object Name", "Object Path", "Package Name", "Package Path".
 	 *	@param Asset - Asset for which to retrieve information.
 	 */
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")
@@ -86,7 +95,8 @@ public:
 	static UTexture* GetTexture(FString PrefixDir, FString TextureFilename);
 
 	/**
-	 * Create material instance from parent material and static mesh object path.
+	 * Create material instance from parent material and static mesh object path. Adheres
+	 * to Epic
 	 * @param MasterMaterial - Parent material, assumes "Diffuse", "Mask", "Normal" parameters
 	 * @param StaticMesh - Mesh object from which to derive path for material instance and textures.
 	*/
