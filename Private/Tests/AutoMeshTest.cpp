@@ -4,7 +4,10 @@
 #include "Tests/AutoMeshTest.h"
 
 #include "AutoMesh.h"
+#include "DesktopPlatform/Public/IDesktopPlatform.h"
+#include "DesktopPlatform/Public/DesktopPlatformModule.h"
 #include "Engine/StaticMeshActor.h"
+#include "Factories/MaterialFactoryNew.h"
 #include "Misc/AutomationTest.h"
 #include "Tests/AutomationEditorCommon.h"
 
@@ -42,7 +45,7 @@ void SpecGetAssetMap::Define()
 			CubeMeshComponent->SetStaticMesh(CubeMesh);
 		});
 
-		It("should return object and package info of asset", [this]
+		It("should return object / package info of asset", [this]
 		{
 			TMap<FString, FString> AssetMap = AAutoMesh::GetAssetMap(CubeMesh);
 			TestEqual(TEXT("AssetMap ObjectName"), AssetMap["ObjectName"], TEXT("Cube"));
@@ -172,20 +175,20 @@ void SpecGetTexture::Define()
 			EngineContentDir = FileManager.ConvertToAbsolutePathForExternalAppForRead(*EngineContentDir);
 		});
 
-		It("should return valid Texture from valid prefix and valid file path", [this]()
+		It("should return valid Texture from valid prefix / valid file path", [this]()
 		{
 			const UTexture* T = AAutoMesh::GetTexture(
 				*EngineContentDir,
 				TEXT("Engine_MI_Shaders/T_Base_Tile_Diffuse.uasset")
 			);
 			TestEqual(
-				TEXT("Testing Texture"),
+				TEXT("Testing Texture Class Name"),
 				T->GetClass()->GetName(),
-				TEXT("Texture")
+				TEXT("Texture2D")
 			);	
 		});
 
-		It("should return valid Texture from empty prefix and valid file path", [this]()
+		It("should return valid Texture from empty prefix / valid file path", [this]()
 		{
 			const FString TexturePath = FString::Printf(
 				TEXT("%sEngine_MI_Shaders/T_Base_Tile_Diffuse.uasset"),
@@ -196,24 +199,99 @@ void SpecGetTexture::Define()
 				TexturePath
 			);
 			TestEqual(
-				TEXT("Testing Texture"),
+				TEXT("Testing Texture Class Name"),
 				T->GetClass()->GetName(),
-				TEXT("Texture")
+				TEXT("Texture2D")
 			);	
 		});
 
 		It("should return nullptr from non-Texture asset", [this]()
 		{
 			AddExpectedError(
-				"Invalid Texture",
+				"Failed to find object",
 				EAutomationExpectedErrorFlags::Contains,
 				1
 			);
 			const UTexture* T = AAutoMesh::GetTexture(
 				*EngineContentDir,
-				TEXT("%sBasicShapes/Cube.Cube")
+				TEXT("BasicShapes/Cube.uasset")
 			);
-			TestNull(TEXT("Testing null T"), T);
+			TestNull(TEXT("Testing nullptr Texture"), T);
+		});
+		
+		It("should return nullptr from invalid file path", [this]()
+		{
+			AddExpectedError(
+				"Not Exists",
+				EAutomationExpectedErrorFlags::Contains,
+				1
+			);
+			const UTexture* T = AAutoMesh::GetTexture(
+				*EngineContentDir,
+				TEXT("Foo/Bar")
+			);
+			TestNull(TEXT("Testing Invalid File Path"), T);
+		});
+	});
+}
+
+BEGIN_DEFINE_SPEC(
+	SpecCreateAsset,
+	"Texturematica.AutoMesh.SpecCreateAsset",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+	// UWorld* TestWorld;
+	// FString EngineContentDir;
+	FString UserTempPath;
+	FString ObjectName;
+	FString PackageName;
+	FString PackagePath;
+END_DEFINE_SPEC(SpecCreateAsset)
+
+void SpecCreateAsset::Define()
+{
+	Describe("Execute()", [this]()
+	{
+		BeforeEach([this]()
+		{
+			/*
+			TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+			TestNotNull("TestWorld Exists", TestWorld);
+			*/
+			IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
+			UserTempPath = DesktopPlatform->GetUserTempPath();
+		});
+
+		It("should return Material asset", [this]()
+		{
+			UMaterialFactoryNew* TestFactory = NewObject<UMaterialFactoryNew>();
+			ObjectName = TEXT("M_Test");
+			PackageName = FString::Printf(
+				TEXT("%s%s"),
+				*UserTempPath,
+				TEXT("M_Test")
+			);
+			UMaterial* NewAsset = Cast<UMaterial>(AAutoMesh::CreateAsset(
+				TestFactory,
+				UMaterial::StaticClass(),
+				ObjectName,
+				PackageName,
+				UserTempPath
+			));
+			TestNotNull(TEXT("Testing Valid Asset, Material"), NewAsset);
+			TestEqual(
+				TEXT("Testing Material Class Name"),
+				NewAsset->GetClass()->GetName(),
+				TEXT("Material")
+			);	
+		});
+
+		AfterEach([this]()
+		{
+			/* TestWorld = GEngine->GetWorldFromContextObject(CubeMeshActor, EGetWorldErrorMode::ReturnNull);
+			TestNotNull("TestWorld Exists", TestWorld);
+			TestWorld->DestroyWorld(false);
+			*/
 		});
 	});
 }
