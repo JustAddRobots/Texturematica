@@ -131,4 +131,12 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")
 	static UStaticMesh* AssignMaterial(UMaterialInstanceConstant* MaterialInstance, UStaticMesh* StaticMesh);
+
+	UFUNCTION(BlueprintCallable, Category="AutoMesh")
+	static UObject* GetRenamedObject(UPackage* Package);
+	
+	UFUNCTION(BlueprintCallable, Category="AutoMesh")
+	static bool SavePackage(UPackage* Package, UObject* Object);
+
+	static TMap<FString, FString> GetMockAssetMap(FString ContentSubDir = TEXT(""));
 };
