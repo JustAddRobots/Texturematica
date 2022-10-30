@@ -6,7 +6,6 @@
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
 #include "EditorTutorial.h"
-// #include "HairStrandsInterface.h"
 #include "IContentBrowserSingleton.h"
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -42,38 +41,6 @@ void AAutoMesh::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-}
-
-FString AAutoMesh::GetIniValue(const FString IniFile, const FString Section, const FString Key)
-{
-	FString Value;
-	if (GConfig->GetString(
-		*Section,
-		*Key,
-		Value,
-		IniFile
-	))
-	{
-		UE_LOG(LogAutoMesh, Warning, TEXT("Detected INI, %s: %s"), *Key, *Value);
-	}
-	return Value;
-}
-
-TMap<FString, FString> AAutoMesh::GetIniValues()
-{
-	TMap<FString, FString> IniValues;
-	if (GConfig)
-	{
-		const FString IniFile = FPaths::ProjectConfigDir().Append("DefaultTexturematica.ini");
-		const FString Section = TEXT("/Script/Texturematica.AutoMesh");
-		const FString MaterialsDir = AAutoMesh::GetIniValue(IniFile, Section, TEXT("MaterialsDir"));
-		const FString MeshesDir = AAutoMesh::GetIniValue(IniFile, Section, TEXT("MeshesDir"));
-		const FString TexturesDir = AAutoMesh::GetIniValue(IniFile, Section, TEXT("TexturesDir"));
-		IniValues.Add(TEXT("MaterialsDir"), MaterialsDir);
-		IniValues.Add(TEXT("MeshesDir"), MeshesDir);
-		IniValues.Add(TEXT("TexturesDir"), TexturesDir);
-	}
-	return IniValues;
 }
 
 TMap<FString, FString> AAutoMesh::GetAssetMap(UObject* Asset)
@@ -187,7 +154,7 @@ UMaterial* AAutoMesh::CreateMasterMaterial(UStaticMesh* StaticMesh)
 			}
 			else
 			{
-				// UE_LOG(LogAutoMesh, Warning, TEXT("MaterialPackageName: %s"), *MaterialPackageName);
+				UE_LOG(LogAutoMesh, Warning, TEXT("MaterialPackageName: %s"), *MaterialPackageName);
 
 				IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
 				FString EngineContentDir = FPaths::EngineContentDir();
@@ -332,8 +299,8 @@ UTexture* AAutoMesh::GetTexture(FString PrefixDir, const FString TextureFilename
 
 UMaterialInstanceConstant* AAutoMesh::CreateMaterialInstance(UMaterial* MasterMaterial, UStaticMesh* StaticMesh)
 {
-	const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());  // CDO
 	UMaterialInstanceConstant* NewMaterialInstance = nullptr;
+	const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());  // CDO
 	if (!IsValid(MasterMaterial)) { UE_LOG(LogAutoMesh, Error, TEXT("nullptr: MasterMaterial")) }
 	else if (!IsValid(StaticMesh)) { UE_LOG(LogAutoMesh, Error, TEXT("nullptr: StaticMesh")) }
 	else
@@ -344,6 +311,8 @@ UMaterialInstanceConstant* AAutoMesh::CreateMaterialInstance(UMaterial* MasterMa
 		const FString StaticMeshPackagePath = StaticMeshMap["PackagePath"];
 		const FString StaticMeshPackageName = StaticMeshMap["PackageName"];
 
+		// Use StaticMesh path info as template for Material Instance path
+		// e.g.: /Game/Meshes/Structure/SM_Structure_MeshName -> /Game/Materials/Structure/MI_Structure_MeshName
 		const FString MaterialInstancePackagePath = *StaticMeshPackagePath.Replace(
 			*AutoMeshDefault->MeshesDir,
 			*AutoMeshDefault->MaterialsDir
@@ -406,7 +375,8 @@ UObject* AAutoMesh::CreateAsset(UFactory* Factory, UClass* StaticClass, const FS
 		UE_LOG(LogAutoMesh, Warning, TEXT("PackageName: %s"), *PackageName);
 		UE_LOG(LogAutoMesh, Warning, TEXT("StaticClass: %s"), *StaticClass->GetName());
 		UE_LOG(LogAutoMesh, Warning, TEXT("Factory: %s"), *Factory->GetName());
-		
+
+		// Load asset if already exists, otherwise create
 		FString ExistingPackage;
 		if (FPackageName::DoesPackageExist(
 			*PackageName,
@@ -463,91 +433,99 @@ UObject* AAutoMesh::CreateAsset(UFactory* Factory, UClass* StaticClass, const FS
 UMaterialInstanceConstant* AAutoMesh::AddTexturesToMIC(UMaterialInstanceConstant* MaterialInstance,
 	UStaticMesh* StaticMesh)
 {
-	checkf(MaterialInstance != nullptr, TEXT("nullptr: MaterialInstance"));
-	checkf(StaticMesh != nullptr, TEXT("nullptr: StaticMesh"));
-	
-	// Get plugin defaults from CDO
-	const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());
-	
-	TMap<FString, FString> StaticMeshMap = AAutoMesh::GetAssetMap(StaticMesh);
-	const FString StaticMeshObjectPath = StaticMeshMap["ObjectPath"];
-	const FString StaticMeshObjectName = StaticMeshMap["ObjectName"];
-	const FString StaticMeshPackagePath = StaticMeshMap["PackagePath"];
-	const FString StaticMeshPackageName = StaticMeshMap["PackageName"];
-
-	// Define standard UE texture parameters
-	TArray<FName> DiffuseMaskNormal =
+	UMaterialInstanceConstant* UpdatedMIC = nullptr;
+	if (!IsValid(MaterialInstance)) { UE_LOG(LogAutoMesh, Error, TEXT("nullptr: Material Instance")); }
+	else if (!IsValid(StaticMesh)) { UE_LOG(LogAutoMesh, Error, TEXT("nullptr: StaticMesh")); }
+	else
 	{
-		TEXT("Diffuse"),
-		TEXT("Mask"),
-		TEXT("Normal")
-	};
+		UpdatedMIC = MaterialInstance;
+		// Get plugin defaults from CDO
+		const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());
 
-	for (FName Param : DiffuseMaskNormal)
-	{
-		FString ParamStr;
-		Param.ToString(ParamStr);
-		
-		FString TexturePackagePath = StaticMeshPackagePath.Replace(
-			*AutoMeshDefault->MeshesDir,
-			*AutoMeshDefault->TexturesDir
-		);
+		TMap<FString, FString> StaticMeshMap = AAutoMesh::GetAssetMap(StaticMesh);
+		const FString StaticMeshObjectPath = StaticMeshMap["ObjectPath"];
+		const FString StaticMeshObjectName = StaticMeshMap["ObjectName"];
+		const FString StaticMeshPackagePath = StaticMeshMap["PackagePath"];
+		const FString StaticMeshPackageName = StaticMeshMap["PackageName"];
 
-		FString TextureObjectName = StaticMeshObjectName.Replace(
-			TEXT("SM_"),
-			TEXT("T_")
-		).Append(
-			"_"
-		).Append(
-			*ParamStr.Left(1)  // Use first letter of param for texture suffix
-		);
-
-		FString TexturePackageName = StaticMeshPackageName.Replace(
-			TEXT("SM_"),
-			TEXT("T_")
-		).Replace(
-			*AutoMeshDefault->MeshesDir,
-			*AutoMeshDefault->TexturesDir
-		).Append(
-			"_"
-		).Append(
-			*ParamStr.Left(1)  // Use first letter of param for texture suffix
-		);
-
-		UE_LOG(LogAutoMesh, Warning, TEXT("TexturePackageName: %s"), *TexturePackageName);
-		UPackage* TexturePackage = UPackageTools::LoadPackage(*TexturePackageName);
-		UObject* TextureObject = AAutoMesh::GetRenamedObject(TexturePackage);
-		if (FPackageName::DoesPackageExist(*TexturePackageName))
+		// Define standard UE texture parameters
+		TArray<FName> DiffuseMaskNormal =
 		{
-			UTexture* ParamTexture = LoadObject<UTexture>(
-				TexturePackage,
-				*TextureObject->GetName()
+			TEXT("Diffuse"),
+			TEXT("Mask"),
+			TEXT("Normal")
+		};
+
+		for (FName Param : DiffuseMaskNormal)
+		{
+			FString ParamStr;
+			Param.ToString(ParamStr);
+
+			FString TexturePackagePath = StaticMeshPackagePath.Replace(
+				*AutoMeshDefault->MeshesDir,
+				*AutoMeshDefault->TexturesDir
 			);
-			
-			if (ParamStr == "Mask")
+
+			FString TextureObjectName = StaticMeshObjectName.Replace(
+				TEXT("SM_"),
+				TEXT("T_")
+			).Append(
+				"_"
+			).Append(
+				*ParamStr.Left(1) // Use first letter of param for texture suffix
+			);
+
+			FString TexturePackageName = StaticMeshPackageName.Replace(
+				TEXT("SM_"),
+				TEXT("T_")
+			).Replace(
+				*AutoMeshDefault->MeshesDir,
+				*AutoMeshDefault->TexturesDir
+			).Append(
+				"_"
+			).Append(
+				*ParamStr.Left(1) // Use first letter of param for texture suffix
+			);
+
+			UE_LOG(LogAutoMesh, Warning, TEXT("TexturePackageName: %s"), *TexturePackageName);
+			UPackage* TexturePackage = UPackageTools::LoadPackage(*TexturePackageName);
+			const UObject* TextureObject = AAutoMesh::GetRenamedObject(TexturePackage);
+			if (FPackageName::DoesPackageExist(*TexturePackageName))
 			{
-				ParamTexture->CompressionSettings = TC_Masks;
+				UTexture* ParamTexture = LoadObject<UTexture>(
+					TexturePackage,
+					*TextureObject->GetName()
+				);
+
+				if (ParamStr == "Mask")
+				{
+					ParamTexture->CompressionSettings = TC_Masks;
+				}
+				UpdatedMIC->SetTextureParameterValueEditorOnly(Param, ParamTexture);
 			}
-			MaterialInstance->SetTextureParameterValueEditorOnly(Param, ParamTexture);
-		}
-		else
-		{
-			UE_LOG(LogAutoMesh, Error, TEXT("Not Exists: %s"), *TexturePackageName);
+			else
+			{
+				UE_LOG(LogAutoMesh, Error, TEXT("Material Instance Unchanged, Not Exists: %s"), *TexturePackageName);
+			}
 		}
 	}
-	return MaterialInstance;
+	return UpdatedMIC;
 }
 
 UStaticMesh* AAutoMesh::AssignMaterial(UMaterialInstanceConstant* MaterialInstance, UStaticMesh* StaticMesh)
 {
-	checkf(MaterialInstance != nullptr, TEXT("nullptr: MaterialInstance"));
-	checkf(StaticMesh != nullptr, TEXT("nullptr: StaticMesh"));
-	
-	StaticMesh->SetMaterial(
-		0,
-		MaterialInstance
-	);
-	return StaticMesh;
+	UStaticMesh* UpdatedMesh = nullptr;
+	if (!IsValid(MaterialInstance)) { UE_LOG(LogAutoMesh, Error, TEXT("nullptr: MaterialInstance")); }
+	else if (!IsValid(StaticMesh)) { UE_LOG(LogAutoMesh, Error, TEXT("nullptr: StaticMesh")); }
+	else
+	{
+		UpdatedMesh = StaticMesh;
+		UpdatedMesh->SetMaterial(
+			0,
+			MaterialInstance
+		);
+	}
+	return UpdatedMesh;
 }
 
 UObject* AAutoMesh::GetRenamedObject(UPackage* Package)
@@ -595,7 +573,7 @@ TMap<FString, FString> AAutoMesh::GetMockAssetMap(FString ContentSubDir)
 {
 	TMap<FString, FString> MockAssetMap;
 	FString Timestamp = FDateTime::Now().ToString().Replace(TEXT("."), TEXT(""));
-	if (*ContentSubDir == TEXT(""))
+	if (*ContentSubDir == TEXT(""))  // default
 	{
 		ContentSubDir = Timestamp;
 	}
@@ -683,9 +661,6 @@ TMap<FString, FString> AAutoMesh::GetMockAssetMap(FString ContentSubDir)
 		*TexturesSubDir,
 		TEXT("T_Test_Cube_N.uasset")
 	);
-	// const FString CubeMeshSrcPlatform = FileManager.ConvertToAbsolutePathForExternalAppForRead(*CubeMeshSrc);
-	// const FString CubeMeshDestPlatform = FileManager.ConvertToAbsolutePathForExternalAppForRead(*CubeMeshDest);
-	// const FString CubeMeshDestPkgName = FPackageName::FilenameToLongPackageName(*CubeMeshDest);
 
 	TArray<FString> AssetDirs =
 	{
@@ -716,6 +691,7 @@ TMap<FString, FString> AAutoMesh::GetMockAssetMap(FString ContentSubDir)
 	TArray<FString> Dest;
 	MockAssetMap.GenerateValueArray(Dest);
 
+	// Copy files using source and destination arrays
 	for (int32 Index=0; Index != Src.Num(); ++Index)
 	{
 		if (!FileManager.CopyFile(*Dest[Index], *Src[Index]))

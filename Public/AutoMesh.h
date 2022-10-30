@@ -17,7 +17,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogAutoMesh, Log, All);
  *
  * Meshes and their associated textures are used to generate material instances which
  * are subsequently assigned back to the mesh. This class is intended to be
- * used in Blueprint and expects the file layout from the course. i.e:
+ * used in Blueprint and requires the course file layout. i.e:
  * 
  * /Game/Meshes/[Prop|Structure]/SM_[Prop|Structure]_MeshName
  * /Game/Textures/[Prop|Structure]/T_[Prop|Structure]_MeshName_[D|M|N]
@@ -50,21 +50,6 @@ public:
 	FString TexturesDir;
 
 	/**
-	 * Get INI value from file.
-	 * @param IniFile - INI file to search.
-	 * @param Section - Section in INI file to search.
-	 * @param Key - Search key.
-	 */
-	static FString GetIniValue(FString IniFile, FString Section, FString Key);
-
-	/**
-	 * Get a map of the plugin's INI. Requires plugin INI (DefaultTexturematica.ini)
-	 * in Config path.
-	 */
-	UFUNCTION(BlueprintCallable, Category="AutoMesh")
-	static TMap<FString, FString> GetIniValues();
-	
-	/**
 	 * Get a map of asset's package and object information with the following keys:
 	 *	"Object Name", "Object Path", "Package Name", "Package Path".
 	 *	@param Asset - Asset for which to retrieve information.
@@ -80,7 +65,7 @@ public:
 	static UStaticMesh* GetStaticMesh(UObject* StaticMeshObject);
 	
 	/**
-	 * Create master material with UE standard "Diffuse", "Mask", & "Normal" texture parameters.
+	 * Create master material with Epic's UE standard "Diffuse", "Mask", & "Normal" texture parameters.
 	 * @param StaticMesh - Static mesh for which to create material.
 	 */
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")
@@ -95,16 +80,16 @@ public:
 	static UTexture* GetTexture(FString PrefixDir, FString TextureFilename);
 
 	/**
-	 * Create material instance from parent material and static mesh object path. Adheres
-	 * to Epic
-	 * @param MasterMaterial - Parent material, assumes "Diffuse", "Mask", "Normal" parameters
+	 * Create material instance from parent material and static mesh object path. Requires
+	 * Epic's UE asset naming convention.
+	 * @param MasterMaterial - Parent material, assumes "Diffuse", "Mask", "Normal" parameters.
 	 * @param StaticMesh - Mesh object from which to derive path for material instance and textures.
 	*/
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")
 	static UMaterialInstanceConstant* CreateMaterialInstance(UMaterial* MasterMaterial, UStaticMesh* StaticMesh);
 
 	/**
-	 * Create asset from factory and object data. Generalised to create different kinds of objects.
+	 * Create asset from factory and object data.
 	 * @param Factory - Factory used to create new instance.
 	 * @param StaticClass - Class from which to create asset.
 	 * @param ObjectName - Object name of asset.
@@ -132,11 +117,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")
 	static UStaticMesh* AssignMaterial(UMaterialInstanceConstant* MaterialInstance, UStaticMesh* StaticMesh);
 
+	/**
+	 * Rename object using package shortname. Useful for duplicating engine assets during unit tests.
+	 * @param Package - package to use for rename.
+	 */
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")
 	static UObject* GetRenamedObject(UPackage* Package);
-	
+
+	/**
+	 * Save package with object. Return true for successful save.
+	 * @param Package - Package to save.
+	 * @param Object - Object to save.
+	 */
 	UFUNCTION(BlueprintCallable, Category="AutoMesh")
 	static bool SavePackage(UPackage* Package, UObject* Object);
 
+	/**
+	 * Create mock assets in the plugin's "Content" directory, using the required filesystem layout.
+	 * Used for unit tests.
+	 * @param ContentSubDir - Optional subdirectory name, defaults to timestamp with format "YYYYMMDD_HHMMSS".
+	 */
 	static TMap<FString, FString> GetMockAssetMap(FString ContentSubDir = TEXT(""));
 };

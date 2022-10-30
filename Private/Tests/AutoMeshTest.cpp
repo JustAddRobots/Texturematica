@@ -3,7 +3,6 @@
 
 #include "Tests/AutoMeshTest.h"
 
-// #include "AudioMixerDevice.h"
 #include "AutoMesh.h"
 #include "PackageTools.h"
 #include "Engine/StaticMeshActor.h"
@@ -46,16 +45,16 @@ void SpecGetAssetMap::Define()
 			CubeMeshComponent->SetStaticMesh(CubeMesh);
 		});
 
-		It("should return object / package info of asset", [this]()
+		It("should return object and package info of asset", [this]()
 		{
 			TMap<FString, FString> AssetMap = AAutoMesh::GetAssetMap(CubeMesh);
-			TestEqual(TEXT("AssetMap ObjectName"), AssetMap["ObjectName"], TEXT("Cube"));
-			TestEqual(TEXT("AssetMap ObjectPath"), AssetMap["ObjectPath"], TEXT("/Engine/BasicShapes/Cube.Cube"));
-			TestEqual(TEXT("AssetMap PackageName"), AssetMap["PackageName"], TEXT("/Engine/BasicShapes/Cube"));
-			TestEqual(TEXT("AssetMap PackagePath"), AssetMap["PackagePath"], TEXT("/Engine/BasicShapes"));
+			TestEqual(TEXT("Test AssetMap ObjectName"), AssetMap["ObjectName"], TEXT("Cube"));
+			TestEqual(TEXT("Test AssetMap ObjectPath"), AssetMap["ObjectPath"], TEXT("/Engine/BasicShapes/Cube.Cube"));
+			TestEqual(TEXT("Test AssetMap PackageName"), AssetMap["PackageName"], TEXT("/Engine/BasicShapes/Cube"));
+			TestEqual(TEXT("Test AssetMap PackagePath"), AssetMap["PackagePath"], TEXT("/Engine/BasicShapes"));
 		});
 
-		It("should return zero-length TMap for invalid Asset", [this]()
+		It("should return zero-length asset map for invalid Asset", [this]()
 		{
 			AddExpectedError(
 				TEXT("nullptr: Asset"),
@@ -64,7 +63,7 @@ void SpecGetAssetMap::Define()
 			);
 			UStaticMesh* NullMesh = nullptr;
 			const TMap<FString, FString> AssetMap = AAutoMesh::GetAssetMap(NullMesh);
-			TestEqual(TEXT("Testing Zero-length Map"), AssetMap.Num(), 0);
+			TestEqual(TEXT("Test Zero-length Asset Map"), AssetMap.Num(), 0);
 		});
 		
 		AfterEach([this]()
@@ -109,31 +108,31 @@ void SpecGetStaticMesh::Define()
 			CubeMeshComponent->SetStaticMesh(CubeMesh);
 		});
 
-		It("should return valid StaticMesh from StaticMeshActor", [this]()
+		It("should return valid StaticMesh for StaticMeshActor", [this]()
 		{
 			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMeshActor);
 			TestEqual(
-				TEXT("Testing StaticMeshActor"),
+				TEXT("Test StaticMeshActor"),
 				SM->GetClass()->GetName(),
 				TEXT("StaticMesh")
 			);
 		});
 		
-		It("should return valid StaticMesh from StaticMeshComponent", [this]()
+		It("should return valid StaticMesh for StaticMeshComponent", [this]()
 		{
 			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMeshComponent);
 			TestEqual(
-				TEXT("Testing StaticMeshComponent"),
+				TEXT("Test StaticMeshComponent"),
 				SM->GetClass()->GetName(),
 				TEXT("StaticMesh")
 			);	
 		});
 		
-		It("should return valid StaticMesh from StaticMesh", [this]()
+		It("should return valid StaticMesh for StaticMesh", [this]()
 		{
 			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMesh);
 			TestEqual(
-				TEXT("Testing StaticMesh"),
+				TEXT("Test StaticMesh"),
 				SM->GetClass()->GetName(),
 				TEXT("StaticMesh")
 			);	
@@ -143,13 +142,13 @@ void SpecGetStaticMesh::Define()
 		{
 			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(CubeMesh);
 			TestEqual(
-				TEXT("Testing SM Object Name"),
+				TEXT("Test SM Object Name"),
 				SM->GetName(),
 				TEXT("Cube")
 			);
 		});
 
-		It("should return nullptr from non-StaticMesh object", [this]
+		It("should return invalid StaticMesh for non-StaticMesh object", [this]
 		{
 			AddExpectedError(
 				"Invalid Static Mesh Class",
@@ -157,7 +156,7 @@ void SpecGetStaticMesh::Define()
 				1
 			);
 			const UStaticMesh* SM = AAutoMesh::GetStaticMesh(TestWorld);
-			TestNull(TEXT("Testing null SM"), SM);
+			TestNull(TEXT("Test invalid StaticMesh"), SM);
 		});
 		
 		AfterEach([this]()
@@ -188,20 +187,20 @@ void SpecGetTexture::Define()
 			EngineContentDir = FileManager.ConvertToAbsolutePathForExternalAppForRead(*EngineContentDir);
 		});
 
-		It("should return valid Texture from valid prefix / valid file path", [this]()
+		It("should return valid Texture for valid prefix and valid file path", [this]()
 		{
 			const UTexture* T = AAutoMesh::GetTexture(
 				*EngineContentDir,
 				TEXT("Engine_MI_Shaders/T_Base_Tile_Diffuse.uasset")
 			);
 			TestEqual(
-				TEXT("Testing Texture Class Name"),
+				TEXT("Test Texture Class Name"),
 				T->GetClass()->GetName(),
 				TEXT("Texture2D")
 			);	
 		});
 
-		It("should return valid Texture from empty prefix / valid file path", [this]()
+		It("should return valid Texture for empty prefix and valid file path", [this]()
 		{
 			const FString TexturePath = FString::Printf(
 				TEXT("%sEngine_MI_Shaders/T_Base_Tile_Diffuse.uasset"),
@@ -212,13 +211,13 @@ void SpecGetTexture::Define()
 				TexturePath
 			);
 			TestEqual(
-				TEXT("Testing Texture Class Name"),
+				TEXT("Test Texture Class Name"),
 				T->GetClass()->GetName(),
 				TEXT("Texture2D")
 			);	
 		});
 
-		It("should return nullptr from non-Texture asset", [this]()
+		It("should return invalid Texture for non-Texture asset", [this]()
 		{
 			AddExpectedError(
 				"Failed to find object",
@@ -229,10 +228,10 @@ void SpecGetTexture::Define()
 				*EngineContentDir,
 				TEXT("BasicShapes/Cube.uasset")
 			);
-			TestNull(TEXT("Testing nullptr Texture"), T);
+			TestNull(TEXT("Test invalid Texture"), T);
 		});
 		
-		It("should return nullptr from invalid file path", [this]()
+		It("should return invalid Texture for invalid file path", [this]()
 		{
 			AddExpectedError(
 				"Not Exists",
@@ -243,7 +242,7 @@ void SpecGetTexture::Define()
 				*EngineContentDir,
 				TEXT("Foo/Bar")
 			);
-			TestNull(TEXT("Testing Invalid File Path"), T);
+			TestNull(TEXT("Test Invalid File Path"), T);
 		});
 	});
 }
@@ -253,7 +252,6 @@ BEGIN_DEFINE_SPEC(
 	"Texturematica.AutoMesh.SpecCreateAsset",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 )
-	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
 	FString ContentDir;
 	FString PlatformContentDir;
 	FString ObjectName;
@@ -269,16 +267,14 @@ void SpecCreateAsset::Define()
 		{
 			const FString Timestamp = FDateTime::Now().ToString().Replace(TEXT("."), TEXT(""));
 			ContentDir = FString::Printf(
-				TEXT("%s%s/%s/%s"),
-				*FPaths::ProjectPluginsDir(),
+				TEXT("/%s/%s/%s"),
 				TEXT("Texturematica"),
 				TEXT("Content"),
 				*Timestamp
 			);
-			// ContentDir = FileManager.ConvertToAbsolutePathForExternalAppForRead(*ContentDir);
 		});
 
-		It("should return valid Material asset", [this]()
+		It("should return valid Material", [this]()
 		{
 			AddExpectedError(
 				"Deactivating a context failed when its window couldn't be found",
@@ -317,7 +313,7 @@ void SpecCreateAsset::Define()
 			);
 		});
 
-		It("should return nullptr from invalid param", [this]()
+		It("should return invalid asset for invalid parameter", [this]()
 		{
 			AddExpectedError(
 				TEXT("nullptr: Factory"),
@@ -348,7 +344,8 @@ void SpecCreateAsset::Define()
 		
 		AfterEach([this]()
 		{
-			PlatformContentDir = FileManager.ConvertToAbsolutePathForExternalAppForRead(*PlatformContentDir);
+			IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+			PlatformContentDir = FileManager.ConvertToAbsolutePathForExternalAppForRead(*ContentDir);
 			if (FileManager.DirectoryExists(*PlatformContentDir))
 			{
 				FileManager.DeleteDirectoryRecursively(*PlatformContentDir);
@@ -377,68 +374,7 @@ void SpecCreateMasterMaterial::Define()
 		{
 			TMap<FString, FString>MockAssetMap = AAutoMesh::GetMockAssetMap();
 			PlatformContentDir = MockAssetMap["PlatformContentDir"];
-			/*
-			const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());  // CDO
-			// Build out directory tree for test files
-			PlatformContentDir = FString::Printf(
-				TEXT("%s%s/%s/"),
-				*FPaths::ProjectPluginsDir(),
-				TEXT("Texturematica"),
-				TEXT("Content")
-			);
-			PlatformContentDir = FileManager.ConvertToAbsolutePathForExternalAppForRead(*PlatformContentDir);
-			const FString MeshesDir = FString::Printf(
-				TEXT("%s%s/"),
-				*PlatformContentDir,
-				*AutoMeshDefault->MeshesDir
-			);
-			const FString MeshesSubDir = FString::Printf(
-				TEXT("%s%s/"),
-				*MeshesDir,
-				TEXT("Test")
-			);
-			const FString MaterialsDir = FString::Printf(
-				TEXT("%s%s/"),
-				*PlatformContentDir,
-				*AutoMeshDefault->MaterialsDir
-			);
-			const FString MaterialsSubDir = FString::Printf(
-				TEXT("%s/%s/"),
-				*MaterialsDir,
-				TEXT("Test")
-			);
-			const FString CubeMeshSrc = FString::Printf(
-				TEXT("%s%s"),
-				*FPaths::EngineContentDir(),
-				TEXT("BasicShapes/Cube.uasset")
-			);
-			const FString CubeMeshDest = FString::Printf(
-				TEXT("%s%s"),
-				*MeshesSubDir,
-				TEXT("SM_Test_Cube.uasset")
-			);
-			const FString CubeMeshSrcPlatform = FileManager.ConvertToAbsolutePathForExternalAppForRead(*CubeMeshSrc);
-			const FString CubeMeshDestPlatform = FileManager.ConvertToAbsolutePathForExternalAppForRead(*CubeMeshDest);
-			const FString CubeMeshDestPkgName = FPackageName::FilenameToLongPackageName(*CubeMeshDest);
-			UE_LOG(LogAutoMesh, Warning, TEXT("CubeMeshSrcPlatform: %s"), *CubeMeshSrcPlatform);
-			UE_LOG(LogAutoMesh, Warning, TEXT("CubeMeshDestPlatform: %s"), *CubeMeshDestPlatform);
-			UE_LOG(LogAutoMesh, Warning, TEXT("CubeMeshDestPkgName: %s"), *CubeMeshDestPkgName);
 
-			if (!FileManager.CreateDirectoryTree(*MeshesSubDir))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CreateDirectoryTree Failure: %s"), *MeshesSubDir);
-			}
-			if (!FileManager.CreateDirectoryTree(*MaterialsSubDir))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CreateDirectoryTree Failure: %s"), *MaterialsSubDir);
-			}
-			if (!FileManager.CopyFile(*CubeMeshDest, *CubeMeshSrc))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CopyFile Failure. SRC: %s, DEST: %s"), *CubeMeshSrc, *CubeMeshDest)
-			}
-			*/
-
-			// Create Test World for plugin Content assets
 			TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
 			TestNotNull("TestWorld Exists", TestWorld);
 			CubeMeshActor = TestWorld->SpawnActor<AStaticMeshActor>();
@@ -446,18 +382,7 @@ void SpecCreateMasterMaterial::Define()
 			CubeMeshComponent = CubeMeshActor->GetStaticMeshComponent();
 			TestNotNull("CubeMeshComponent Exists", CubeMeshComponent);
 
-			// Get object from package
 			UPackage* CubeMeshPkg = UPackageTools::LoadPackage(MockAssetMap["CubeMeshDest"]);
-			/*
-			CubeMeshPkg->FullyLoad();
-			TArray<UObject*> Objs;
-			TArray<UPackage*> Pkgs;
-			Pkgs.Add(CubeMeshPkg);
-			UPackageTools::GetObjectsInPackages(&Pkgs, Objs);
-			UObject* CubeMeshObj = Objs[0];
-			UE_LOG(LogAutoMesh, Warning, TEXT("CubeMeshObj FullName: %s"), *CubeMeshObj->GetFullName())
-			CubeMeshObj->Rename(*FPackageName::GetShortName(*CubeMeshDestPkgName));  // Rename object to match package
-			*/
 			CubeMesh = Cast<UStaticMesh>(
 				LoadObject<UStaticMesh>(
 					CubeMeshPkg,
@@ -476,19 +401,19 @@ void SpecCreateMasterMaterial::Define()
 				1
 			);
 			UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
-			TestNotNull(TEXT("Testing Valid Material"), MasterMaterial);
+			TestNotNull(TEXT("Test Valid Material"), MasterMaterial);
 			TestEqual(
-				TEXT("Testing Material Class Name"),
+				TEXT("Test Material Class Name"),
 				MasterMaterial->GetClass()->GetName(),
 				TEXT("Material")
 			);
 			TestEqual(
-				TEXT("Testing Material Name"),
+				TEXT("Test Material Name"),
 				MasterMaterial->GetName(),
 				TEXT("M_Test")
 			);
 			TestEqual(
-				TEXT("Testing Material Expression Total"),
+				TEXT("Test Material Expression Total"),
 				MasterMaterial->Expressions.Num(),
 				3
 			);
@@ -497,8 +422,8 @@ void SpecCreateMasterMaterial::Define()
 			{
 				UMaterialExpressionTextureSampleParameter2D* ExprTexture2D =
 					Cast<UMaterialExpressionTextureSampleParameter2D>(Expr);
-				TestNotNull(TEXT("Testing Valid Texture2D MaterialExpression"), ExprTexture2D);
-				TestTrue(TEXT("Testing MaterialExpression Param Name"),
+				TestNotNull(TEXT("Test Valid Texture2D MaterialExpression"), ExprTexture2D);
+				TestTrue(TEXT("Test MaterialExpression Param Name"),
 					(
 					ExprTexture2D->GetParameterName() == FName(TEXT("Diffuse")) ||
 					ExprTexture2D->GetParameterName() == FName(TEXT("Mask")) ||
@@ -508,7 +433,7 @@ void SpecCreateMasterMaterial::Define()
 			}
 		});
 
-		It("should return nullptr from invalid StaticMesh", [this]()
+		It("should return invalid MasterMaterial for invalid StaticMesh", [this]()
 		{
 			AddExpectedError(
 				TEXT("nullptr: StaticMesh"),
@@ -516,8 +441,8 @@ void SpecCreateMasterMaterial::Define()
 				1
 			);
 			UStaticMesh* NullMesh = nullptr;
-			UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(NullMesh);
-			TestNull(TEXT("Testing Invalid StaticMesh"), MasterMaterial);
+			const UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(NullMesh);
+			TestNull(TEXT("Test Invalid StaticMesh"), MasterMaterial);
 		});
 
 		AfterEach([this]()
@@ -535,19 +460,17 @@ void SpecCreateMasterMaterial::Define()
 		});
 	});
 }
+
 BEGIN_DEFINE_SPEC(
 	SpecCreateMaterialInstance,
 	"Texturematica.AutoMesh.SpecCreateMaterialInstance",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
 )
-	IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
 	FString PlatformContentDir;
 	UWorld* TestWorld;
 	AStaticMeshActor* CubeMeshActor;
 	UStaticMeshComponent* CubeMeshComponent;
 	UStaticMesh* CubeMesh;
-	UMaterial* MasterMaterial;
-	UMaterialInstanceConstant* MaterialInstance;
 END_DEFINE_SPEC(SpecCreateMaterialInstance)
 
 void SpecCreateMaterialInstance::Define()
@@ -556,119 +479,9 @@ void SpecCreateMaterialInstance::Define()
 	{
 		BeforeEach([this]()
 		{
-			const AAutoMesh* AutoMeshDefault = GetDefault<AAutoMesh>(AAutoMesh::StaticClass());  // CDO
-			// Build out directory tree for test files
-			PlatformContentDir = FString::Printf(
-				TEXT("%s%s/%s/"),
-				*FPaths::ProjectPluginsDir(),
-				TEXT("Texturematica"),
-				TEXT("Content")
-			);
-			PlatformContentDir = FileManager.ConvertToAbsolutePathForExternalAppForRead(*PlatformContentDir);
-			const FString MeshesDir = FString::Printf(
-				TEXT("%s%s/"),
-				*PlatformContentDir,
-				*AutoMeshDefault->MeshesDir
-			);
-			const FString MeshesSubDir = FString::Printf(
-				TEXT("%s%s/"),
-				*MeshesDir,
-				TEXT("Test")
-			);
-			const FString MaterialsDir = FString::Printf(
-				TEXT("%s%s/"),
-				*PlatformContentDir,
-				*AutoMeshDefault->MaterialsDir
-			);
-			const FString MaterialsSubDir = FString::Printf(
-				TEXT("%s/%s/"),
-				*MaterialsDir,
-				TEXT("Test")
-			);
-			const FString TexturesDir = FString::Printf(
-				TEXT("%s%s/"),
-				*PlatformContentDir,
-				*AutoMeshDefault->TexturesDir
-			);
-			const FString TexturesSubDir = FString::Printf(
-				TEXT("%s/%s/"),
-				*TexturesDir,
-				TEXT("Test")
-			);
-			const FString CubeMeshSrc = FString::Printf(
-				TEXT("%s%s"),
-				*FPaths::EngineContentDir(),
-				TEXT("BasicShapes/Cube.uasset")
-			);
-			const FString CubeMeshDest = FString::Printf(
-				TEXT("%s%s"),
-				*MeshesSubDir,
-				TEXT("SM_Test_Cube.uasset")
-			);
-			const FString DiffuseTextureSrc = FString::Printf(
-				TEXT("%s%s"),
-				*FPaths::EngineContentDir(),
-				TEXT("EngineMaterials/DefaultDiffuse.uasset")
-			);
-			const FString DiffuseTextureDest = FString::Printf(
-				TEXT("%s%s"),
-				*TexturesSubDir,
-				TEXT("T_Test_Cube_D.uasset")
-			);
-			const FString MaskTextureSrc = FString::Printf(
-				TEXT("%s%s"),
-				*FPaths::EngineContentDir(),
-				TEXT("EngineMaterials/DefaultDiffuse.uasset")
-			);
-			const FString MaskTextureDest = FString::Printf(
-				TEXT("%s%s"),
-				*TexturesSubDir,
-				TEXT("T_Test_Cube_M.uasset")
-			);
-			const FString NormalTextureSrc = FString::Printf(
-				TEXT("%s%s"),
-				*FPaths::EngineContentDir(),
-				TEXT("EngineMaterials/DefaultNormal.uasset")
-			);
-			const FString NormalTextureDest = FString::Printf(
-				TEXT("%s%s"),
-				*TexturesSubDir,
-				TEXT("T_Test_Cube_N.uasset")
-			);
-			const FString CubeMeshSrcPlatform = FileManager.ConvertToAbsolutePathForExternalAppForRead(*CubeMeshSrc);
-			const FString CubeMeshDestPlatform = FileManager.ConvertToAbsolutePathForExternalAppForRead(*CubeMeshDest);
-			const FString CubeMeshDestPkgName = FPackageName::FilenameToLongPackageName(*CubeMeshDest);
-
-			if (!FileManager.CreateDirectoryTree(*MeshesSubDir))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CreateDirectoryTree Failure: %s"), *MeshesSubDir);
-			}
-			if (!FileManager.CreateDirectoryTree(*MaterialsSubDir))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CreateDirectoryTree Failure: %s"), *MaterialsSubDir);
-			}
-			if (!FileManager.CreateDirectoryTree(*TexturesSubDir))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CreateDirectoryTree Failure: %s"), *TexturesSubDir);
-			}
-			if (!FileManager.CopyFile(*CubeMeshDest, *CubeMeshSrc))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CopyFile Failure. SRC: %s, DEST: %s"), *CubeMeshSrc, *CubeMeshDest)
-			}
-			if (!FileManager.CopyFile(*DiffuseTextureDest, *DiffuseTextureSrc))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CopyFile Failure. SRC: %s, DEST: %s"), *DiffuseTextureSrc, *CubeMeshDest)
-			}
-			if (!FileManager.CopyFile(*MaskTextureDest, *MaskTextureSrc))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CopyFile Failure. SRC: %s, DEST: %s"), *MaskTextureSrc, *CubeMeshDest)
-			}
-			if (!FileManager.CopyFile(*NormalTextureDest, *NormalTextureSrc))
-			{
-				UE_LOG(LogAutoMesh, Error, TEXT("CopyFile Failure. SRC: %s, DEST: %s"), *NormalTextureSrc, *CubeMeshDest)
-			}
+			TMap<FString, FString>MockAssetMap = AAutoMesh::GetMockAssetMap();
+			PlatformContentDir = MockAssetMap["PlatformContentDir"];
 			
-			// Create Test World for plugin Content assets
 			TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
 			TestNotNull("TestWorld Exists", TestWorld);
 			CubeMeshActor = TestWorld->SpawnActor<AStaticMeshActor>();
@@ -676,49 +489,36 @@ void SpecCreateMaterialInstance::Define()
 			CubeMeshComponent = CubeMeshActor->GetStaticMeshComponent();
 			TestNotNull("CubeMeshComponent Exists", CubeMeshComponent);
 
-			// Get object from package
-			UPackage* CubeMeshPkg = UPackageTools::LoadPackage(*CubeMeshDestPkgName);
-			UObject* CubeMeshObj = AAutoMesh::GetRenamedObject(CubeMeshPkg);
-			/*
-			CubeMeshPkg->FullyLoad();
-			TArray<UObject*> Objs;
-			TArray<UPackage*> Pkgs;
-			Pkgs.Add(CubeMeshPkg);
-			UPackageTools::GetObjectsInPackages(&Pkgs, Objs);
-			UObject* CubeMeshObj = Objs[0];
-			
-			CubeMeshObj->Rename(*FPackageName::GetShortName(*CubeMeshDestPkgName));  // Rename to match dest package
-			*/
-			UE_LOG(LogAutoMesh, Warning, TEXT("CubeMeshObj FullName: %s"), *CubeMeshObj->GetFullName())
+			UPackage* CubeMeshPkg = UPackageTools::LoadPackage(MockAssetMap["CubeMeshDest"]);
 			CubeMesh = Cast<UStaticMesh>(
 				LoadObject<UStaticMesh>(
 					CubeMeshPkg,
-					*CubeMeshObj->GetName()
+					*FPackageName::GetShortName(*CubeMeshPkg->GetName())
 				)
 			);
 			TestNotNull("CubeMesh Exists", CubeMesh);
 			CubeMeshComponent->SetStaticMesh(CubeMesh);
 		});
 
-		It("should return valid MaterialInstance from valid MasterMaterial and StaticMesh", [this]()
+		It("should return valid MaterialInstance for valid MasterMaterial and valid StaticMesh", [this]()
 		{
-			MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
-			TestNotNull(TEXT("Testing Valid MasterMaterial"), MasterMaterial);
-			MaterialInstance = AAutoMesh::CreateMaterialInstance(MasterMaterial, CubeMesh);
-			TestNotNull(TEXT("Testing Valid Material Instance"), MaterialInstance);
+			UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
+			TestNotNull(TEXT("Test Valid MasterMaterial"), MasterMaterial);
+			UMaterialInstanceConstant* MaterialInstance = AAutoMesh::CreateMaterialInstance(MasterMaterial, CubeMesh);
+			TestNotNull(TEXT("Test Valid MaterialInstance"), MaterialInstance);
 			TestEqual(
-				TEXT("Testing Material Instance Class"),
+				TEXT("Test Material Instance Class"),
 				MaterialInstance->GetClass()->GetName(),
 				TEXT("MaterialInstanceConstant")
 			);
 			TestEqual(
-				TEXT("Testing Material Instance Name"),
+				TEXT("Test Material Instance Name"),
 				MaterialInstance->GetName(),
 				TEXT("MI_Test_Cube")
 			);
 		});
 
-		It("should return nullptr for invalid MasterMaterial and valid StaticMesh", [this]()
+		It("should return invalid MaterialInstance for invalid MasterMaterial and valid StaticMesh", [this]()
 		{
 			AddExpectedError(
 				TEXT("nullptr: MasterMaterial"),
@@ -726,11 +526,11 @@ void SpecCreateMaterialInstance::Define()
 				1
 			);
 			UMaterial* NullMaterial = nullptr;
-			MaterialInstance = AAutoMesh::CreateMaterialInstance(NullMaterial, CubeMesh);
-			TestNull(TEXT("Testing Invalid MasterMaterial"), MaterialInstance);
+			const UMaterialInstanceConstant* MaterialInstance = AAutoMesh::CreateMaterialInstance(NullMaterial, CubeMesh);
+			TestNull(TEXT("Test Invalid MasterMaterial"), MaterialInstance);
 		});
 
-		It("should return nullptr for valid MasterMaterial and invalid StaticMesh", [this]()
+		It("should return invalid MaterialInstance for valid MasterMaterial and invalid StaticMesh", [this]()
 		{
 			AddExpectedError(
 				TEXT("Deactivating a context failed when its window couldn't be found"),
@@ -743,10 +543,10 @@ void SpecCreateMaterialInstance::Define()
 				1
 			);
 			UStaticMesh* NullMesh = nullptr;
-			MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
-			TestNotNull(TEXT("Testing Valid MasterMaterial"), MasterMaterial);
-			MaterialInstance = AAutoMesh::CreateMaterialInstance(MasterMaterial, NullMesh);
-			TestNull(TEXT("Testing Invalid StaticMesh"), MaterialInstance);
+			UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
+			TestNotNull(TEXT("Test Valid MasterMaterial"), MasterMaterial);
+			const UMaterialInstanceConstant* MaterialInstance = AAutoMesh::CreateMaterialInstance(MasterMaterial, NullMesh);
+			TestNull(TEXT("Test Invalid StaticMesh"), MaterialInstance);
 		});
 		
 		AfterEach([this]()
@@ -754,22 +554,7 @@ void SpecCreateMaterialInstance::Define()
 			TestWorld = GEngine->GetWorldFromContextObject(CubeMeshActor, EGetWorldErrorMode::ReturnNull);
 			TestNotNull("TestWorld Exists", TestWorld);
 			TestWorld->DestroyWorld(false);
-
-			TArray<UObject*> ObjsToDelete =
-			{
-				MaterialInstance,
-				MasterMaterial
-			};
-
-			for (UObject* Obj : ObjsToDelete)
-			{
-				if (IsValid(Obj))
-				{
-					UE_LOG(LogAutoMesh, Warning, TEXT("Destroying Object: %s"), *Obj->GetFullName());
-					Obj->ConditionalBeginDestroy();
-				}
-			}
-			
+			IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
 			if (FileManager.DirectoryExists(*PlatformContentDir))
 			{
 				UE_LOG(LogAutoMesh, Warning, TEXT("Deleting Dir: %s"), *PlatformContentDir);
@@ -781,7 +566,233 @@ void SpecCreateMaterialInstance::Define()
 		});
 	});
 }
+
+BEGIN_DEFINE_SPEC(
+	SpecAddTexturesToMIC,
+	"Texturematica.AutoMesh.SpecAddTexturesToMIC",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+	FString PlatformContentDir;
+	UWorld* TestWorld;
+	AStaticMeshActor* CubeMeshActor;
+	UStaticMeshComponent* CubeMeshComponent;
+	UStaticMesh* CubeMesh;
+	TMap<FString, FString>MockAssetMap;
+END_DEFINE_SPEC(SpecAddTexturesToMIC)
+
+void SpecAddTexturesToMIC::Define()
+{
+	Describe("Execute()", [this]()
+	{
+		BeforeEach([this]()
+		{
+			MockAssetMap = AAutoMesh::GetMockAssetMap();
+			PlatformContentDir = MockAssetMap["PlatformContentDir"];
 			
+			TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+			TestNotNull("TestWorld Exists", TestWorld);
+			CubeMeshActor = TestWorld->SpawnActor<AStaticMeshActor>();
+			TestNotNull("CubeMeshActor Exists", CubeMeshActor);
+			CubeMeshComponent = CubeMeshActor->GetStaticMeshComponent();
+			TestNotNull("CubeMeshComponent Exists", CubeMeshComponent);
+
+			UPackage* CubeMeshPkg = UPackageTools::LoadPackage(MockAssetMap["CubeMeshDest"]);
+			CubeMesh = Cast<UStaticMesh>(
+				LoadObject<UStaticMesh>(
+					CubeMeshPkg,
+					*FPackageName::GetShortName(*CubeMeshPkg->GetName())
+				)
+			);
+			TestNotNull("CubeMesh Exists", CubeMesh);
+			CubeMeshComponent->SetStaticMesh(CubeMesh);			
+		});
+
+		It("should return valid MaterialInstance with valid Textures", [this]()
+		{
+			UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
+			TestNotNull(TEXT("Test Valid MasterMaterial"), MasterMaterial);
+			UMaterialInstanceConstant* MaterialInstance = AAutoMesh::CreateMaterialInstance(MasterMaterial, CubeMesh);
+			TestNotNull(TEXT("Test Valid MaterialInstance"), MaterialInstance);
+			MaterialInstance = AAutoMesh::AddTexturesToMIC(MaterialInstance, CubeMesh);
+			TestNotNull(TEXT("Test Valid MaterialInstance with Textures"), MaterialInstance);
+			TArray<UTexture *> Textures;
+			MaterialInstance->GetUsedTextures(
+				Textures,
+				EMaterialQualityLevel::High,
+				false,
+				ERHIFeatureLevel::Num,
+				false
+				);
+			for (const UTexture* Texture : Textures)
+			{
+				TestTrue(TEXT("Test Texture Name"),
+					(
+						Texture->GetName() == MockAssetMap["DiffuseTextureDest"] ||
+						Texture->GetName() == MockAssetMap["MaskTextureDest"] ||
+						Texture->GetName() == MockAssetMap["NormalTextureDest"]
+					)
+				);
+			}
+		});
+
+		It("should return invalid MaterialInstance for invalid input Material Instance", [this]()
+		{
+			AddExpectedError(
+				TEXT("nullptr: Material Instance"),
+				EAutomationExpectedErrorFlags::Contains,
+				1
+			);
+			UMaterialInstanceConstant* NullMIC = nullptr;
+			const UMaterialInstanceConstant* MaterialInstance = AAutoMesh::AddTexturesToMIC(NullMIC, CubeMesh);
+			TestNull(TEXT("Test Invalid MaterialInstance"), MaterialInstance);
+		});
+		
+		It("should return invalid MaterialInstance for invalid StaticMesh", [this]()
+		{
+			AddExpectedError(
+				TEXT("Deactivating a context failed when its window couldn't be found"),
+				EAutomationExpectedErrorFlags::Contains,
+				1
+			);
+			AddExpectedError(
+				TEXT("nullptr: StaticMesh"),
+				EAutomationExpectedErrorFlags::Contains,
+				1
+			);
+			UStaticMesh* NullMesh = nullptr;
+			UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
+			TestNotNull(TEXT("Test Valid MasterMaterial"), MasterMaterial);
+			UMaterialInstanceConstant* MaterialInstance = AAutoMesh::CreateMaterialInstance(MasterMaterial, CubeMesh);
+			TestNotNull(TEXT("Test Valid MaterialInstance"), MaterialInstance);
+			MaterialInstance = AAutoMesh::AddTexturesToMIC(MaterialInstance, NullMesh);
+			TestNull(TEXT("Test Invalid MaterialInstance"), MaterialInstance);
+		});
+		
+		AfterEach([this]()
+		{
+			TestWorld = GEngine->GetWorldFromContextObject(CubeMeshActor, EGetWorldErrorMode::ReturnNull);
+			TestNotNull("TestWorld Exists", TestWorld);
+			TestWorld->DestroyWorld(false);
+			IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+			if (FileManager.DirectoryExists(*PlatformContentDir))
+			{
+				UE_LOG(LogAutoMesh, Warning, TEXT("Deleting Dir: %s"), *PlatformContentDir);
+				if (!FileManager.DeleteDirectoryRecursively(*PlatformContentDir))
+				{
+					UE_LOG(LogAutoMesh, Warning, TEXT("DeleteDirectoryRecursively Fail: %s"), *PlatformContentDir)
+				}
+			}
+		});
+	});
+}
+
+BEGIN_DEFINE_SPEC(
+	SpecAssignMaterial,
+	"Texturematica.AutoMesh.SpecAssignMaterial",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+	FString PlatformContentDir;
+	UWorld* TestWorld;
+	AStaticMeshActor* CubeMeshActor;
+	UStaticMeshComponent* CubeMeshComponent;
+	UStaticMesh* CubeMesh;
+END_DEFINE_SPEC(SpecAssignMaterial)
+
+void SpecAssignMaterial::Define()
+{
+	Describe("Execute()", [this]()
+	{
+		BeforeEach([this]()
+		{
+			TMap<FString, FString> MockAssetMap = AAutoMesh::GetMockAssetMap();
+			PlatformContentDir = MockAssetMap["PlatformContentDir"];
+			
+			TestWorld = FAutomationEditorCommonUtils::CreateNewMap();
+			TestNotNull("TestWorld Exists", TestWorld);
+			CubeMeshActor = TestWorld->SpawnActor<AStaticMeshActor>();
+			TestNotNull("CubeMeshActor Exists", CubeMeshActor);
+			CubeMeshComponent = CubeMeshActor->GetStaticMeshComponent();
+			TestNotNull("CubeMeshComponent Exists", CubeMeshComponent);
+
+			UPackage* CubeMeshPkg = UPackageTools::LoadPackage(MockAssetMap["CubeMeshDest"]);
+			CubeMesh = Cast<UStaticMesh>(
+				LoadObject<UStaticMesh>(
+					CubeMeshPkg,
+					*FPackageName::GetShortName(*CubeMeshPkg->GetName())
+				)
+			);
+			TestNotNull("CubeMesh Exists", CubeMesh);
+			CubeMeshComponent->SetStaticMesh(CubeMesh);			
+		});
+
+		It("should return StaticMesh with assigned Material", [this]()
+		{
+			UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
+			TestNotNull(TEXT("Test Valid MasterMaterial"), MasterMaterial);
+			UMaterialInstanceConstant* MaterialInstance = AAutoMesh::CreateMaterialInstance(MasterMaterial, CubeMesh);
+			TestNotNull(TEXT("Test Valid MaterialInstance"), MaterialInstance);
+			MaterialInstance = AAutoMesh::AddTexturesToMIC(MaterialInstance, CubeMesh);
+			TestNotNull(TEXT("Test Valid MaterialInstance with Textures"), MaterialInstance);
+			UStaticMesh* UpdatedMesh = AAutoMesh::AssignMaterial(MaterialInstance, CubeMesh);
+			TestNotNull(TEXT("Test Valid StaticMesh"), UpdatedMesh);
+			UMaterialInterface* CubeMaterial = UpdatedMesh->GetMaterial(0);
+			TestNotNull(TEXT("Test Valid Material"), CubeMaterial);
+			TestEqual(TEXT("Test Cube Material Name"), CubeMaterial->GetBaseMaterial()->GetName(), TEXT("M_Test"));
+		});
+
+		It("should return invalid StaticMesh for invalid MIC and valid StaticMesh", [this]()
+		{
+			AddExpectedError(
+				TEXT("nullptr: MaterialInstance"),
+				EAutomationExpectedErrorFlags::Contains,
+				1
+			);
+			UMaterialInstanceConstant* NullMIC = nullptr;
+			const UStaticMesh* UpdatedMesh = AAutoMesh::AssignMaterial(NullMIC, CubeMesh);
+			TestNull(TEXT("Test Valid StaticMesh"), UpdatedMesh);
+		});
+		
+		It("should return invalid StaticMesh for valid MIC and invalid input StaticMesh", [this]()
+		{
+			AddExpectedError(
+				TEXT("Deactivating a context failed when its window couldn't be found"),
+				EAutomationExpectedErrorFlags::Contains,
+				1
+			);
+			AddExpectedError(
+				TEXT("nullptr: StaticMesh"),
+				EAutomationExpectedErrorFlags::Contains,
+				1
+			);
+			UStaticMesh* NullMesh = nullptr;
+			UMaterial* MasterMaterial = AAutoMesh::CreateMasterMaterial(CubeMesh);
+			TestNotNull(TEXT("Test Valid MasterMaterial"), MasterMaterial);
+			UMaterialInstanceConstant* MaterialInstance = AAutoMesh::CreateMaterialInstance(MasterMaterial, CubeMesh);
+			TestNotNull(TEXT("Test Valid MaterialInstance"), MaterialInstance);
+			MaterialInstance = AAutoMesh::AddTexturesToMIC(MaterialInstance, CubeMesh);
+			TestNotNull(TEXT("Test Valid MaterialInstance with Textures"), MaterialInstance);
+			const UStaticMesh* UpdatedMesh = AAutoMesh::AssignMaterial(MaterialInstance, NullMesh);
+			TestNull(TEXT("Test Invalid StaticMesh"), UpdatedMesh);
+		});
+		
+		AfterEach([this]()
+		{
+			TestWorld = GEngine->GetWorldFromContextObject(CubeMeshActor, EGetWorldErrorMode::ReturnNull);
+			TestNotNull("TestWorld Exists", TestWorld);
+			TestWorld->DestroyWorld(false);
+			IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+			if (FileManager.DirectoryExists(*PlatformContentDir))
+			{
+				UE_LOG(LogAutoMesh, Warning, TEXT("Deleting Dir: %s"), *PlatformContentDir);
+				if (!FileManager.DeleteDirectoryRecursively(*PlatformContentDir))
+				{
+					UE_LOG(LogAutoMesh, Warning, TEXT("DeleteDirectoryRecursively Fail: %s"), *PlatformContentDir)
+				}
+			}			
+		});
+	});
+}
+
 BEGIN_DEFINE_SPEC(
 	SpecGetRenamedObject,
 	"Texturematica.AutoMesh.SpecGetRenamedObject",
@@ -843,12 +854,12 @@ void SpecGetRenamedObject::Define()
 		{
 			UPackage* CubeMeshPkg = UPackageTools::LoadPackage(*CubeMeshDestPkgName);
 			UObject* CubeMeshObj = AAutoMesh::GetRenamedObject(CubeMeshPkg);
-			TestNotNull(TEXT("Testing Valid Object"), CubeMeshObj);
+			TestNotNull(TEXT("Test Valid Object"), CubeMeshObj);
 			TestEqual(TEXT("Test Object Name"), CubeMeshObj->GetName(), TEXT("SM_Test_Cube"));
 		}
 		);
 
-		It("should return nullptr for invalid Package", [this]()
+		It("should return invalid Object for invalid Package", [this]()
 		{
 			AddExpectedError(
 				TEXT("nullptr: Package"),
@@ -856,7 +867,7 @@ void SpecGetRenamedObject::Define()
 				1
 			);			
 			UPackage* CubeMeshPkg = nullptr;
-			UObject* CubeMeshObj = AAutoMesh::GetRenamedObject(CubeMeshPkg);
+			const UObject* CubeMeshObj = AAutoMesh::GetRenamedObject(CubeMeshPkg);
 			TestNull(TEXT("Test Invalid Package"), CubeMeshObj);
 		});
 		
@@ -931,14 +942,14 @@ void SpecSavePackage::Define()
 			}
 		});
 
-		It("should return true for valid Package, valid Object", [this]()
+		It("should return true for valid Package and valid Object", [this]()
 		{
 			UPackage* CubeMeshPkg = UPackageTools::LoadPackage(*CubeMeshDestPkgName);
 			UObject* CubeMeshObj = AAutoMesh::GetRenamedObject(CubeMeshPkg);
 			TestTrue(TEXT("Test Successful Save"), AAutoMesh::SavePackage(CubeMeshPkg, CubeMeshObj));
 		});
 
-		It("should return false for invalid Package, valid Object", [this]()
+		It("should return false for invalid Package and valid Object", [this]()
 		{
 			AddExpectedError(
 				TEXT("nullptr: Package"),
@@ -955,7 +966,7 @@ void SpecSavePackage::Define()
 			TestFalse(TEXT("Test Save Failure"), AAutoMesh::SavePackage(CubeMeshPkg, CubeMeshObj));
 		});
 		
-		It("should return false for valid Package, invalid Object", [this]()
+		It("should return false for valid Package and invalid Object", [this]()
 		{
 			AddExpectedError(
 				TEXT("nullptr: Object"),
