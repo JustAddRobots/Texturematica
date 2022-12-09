@@ -573,7 +573,7 @@ TMap<FString, FString> AAutoMesh::GetMockAssetMap(FString ContentSubDir)
 {
 	TMap<FString, FString> MockAssetMap;
 	FString Timestamp = FDateTime::Now().ToString().Replace(TEXT("."), TEXT(""));
-	if (*ContentSubDir == TEXT(""))  // default
+	if (ContentSubDir.Compare(TEXT("")) == 0)  // default
 	{
 		ContentSubDir = Timestamp;
 	}
